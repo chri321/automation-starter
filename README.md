@@ -223,7 +223,8 @@ automation-starter/
 ├── ruff.toml                      # Python lint rules
 ├── CHANGELOG.md
 ├── CONTRIBUTING.md
-├── LICENSE
+├── LICENSE                        # MIT, verbatim so detection tools match it
+├── NOTICE                         # attribution for the derived configuration layer
 ├── README.md                      # this file (canonical)
 └── README_zh-CN.md                # Simplified Chinese translation
 ```
@@ -318,7 +319,9 @@ at `--severity=info`.
 The configuration layer (`.editorconfig`, `.gitattributes`, `.shellcheckrc`,
 `.yamllint.yml`, `PSScriptAnalyzerSettings.psd1`, `ruff.toml` and the hook set) is
 adapted from [snowdreamtech/template](https://github.com/snowdreamtech/template),
-also MIT licensed. That project's `.agent/rules/shell.md` is an excellent
+also MIT licensed. The required attribution is recorded in [`NOTICE`](NOTICE);
+[`LICENSE`](LICENSE) is kept as the unmodified MIT text so that licence-detection
+tools recognise it. That project's `.agent/rules/shell.md` is an excellent
 practical reference for writing robust shell and is worth reading in full.
 
 Two things this kit does differently, both learned the hard way while testing:

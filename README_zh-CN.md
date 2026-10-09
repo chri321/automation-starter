@@ -217,7 +217,8 @@ automation-starter/
 ├── ruff.toml                      # Python lint 规则
 ├── CHANGELOG.md
 ├── CONTRIBUTING.md
-├── LICENSE
+├── LICENSE                        # MIT，保持原文以便检测工具正确识别
+├── NOTICE                         # 派生配置层的署名
 ├── README.md                      # 英文规范版（主版本）
 └── README_zh-CN.md                # 本文件
 ```
@@ -308,7 +309,9 @@ gitleaks 8.30.1。
 配置层（`.editorconfig`、`.gitattributes`、`.shellcheckrc`、`.yamllint.yml`、
 `PSScriptAnalyzerSettings.psd1`、`ruff.toml` 及 hook 集合）改编自
 [snowdreamtech/template](https://github.com/snowdreamtech/template)，同样是 MIT
-许可。该项目的 `.agent/rules/shell.md` 是一份极好的 Shell 实战规范，值得通读。
+许可。署名记录在 [`NOTICE`](NOTICE) 中；[`LICENSE`](LICENSE) 保持 MIT 原文不改动，
+以便许可证检测工具正确识别。该项目的 `.agent/rules/shell.md` 是一份极好的 Shell
+实战规范，值得通读。
 
 本骨架有两处做法不同，都是测试中踩出来的：
 

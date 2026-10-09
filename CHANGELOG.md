@@ -33,7 +33,8 @@ Initial release.
   `ubuntu-latest`, `windows-latest` and `macos-latest` with `fail-fast: false`.
 - **Documentation** — `README.md` (English, canonical), `README_zh-CN.md`
   (Simplified Chinese), `CONTRIBUTING.md` and this changelog.
-- **MIT licence** with attribution to the upstream template.
+- **MIT licence** and a `NOTICE` file recording attribution to the upstream
+  template.
 
 ### Fixed
 
@@ -56,6 +57,12 @@ pass, and are recorded because they are easy to reintroduce.
 
 ### Changed
 
+- **Attribution moved out of `LICENSE` into `NOTICE`.** Inserting a provenance
+  paragraph between the copyright line and the permission grant broke licence
+  detection: the GitHub API reported `spdx_id: NOASSERTION` and the repository
+  sidebar displayed "Other" instead of "MIT License". `LICENSE` now contains the
+  verbatim MIT text, and the upstream copyright notice required by that licence
+  lives in `NOTICE`.
 - **`"on":` is quoted in the CI workflow.** YAML 1.1 resolves a bare `on` key to
   boolean true, and this repository's strict yamllint `truthy` rule checks keys as
   well as values, which rejects every GitHub Actions workflow. Quoting keeps the

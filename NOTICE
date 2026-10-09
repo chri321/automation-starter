@@ -1,0 +1,24 @@
+automation-starter
+Copyright (c) 2026 chri321
+
+This product includes material derived from snowdreamtech/template
+(https://github.com/snowdreamtech/template),
+Copyright (c) 2026-present SnowdreamTech Inc.,
+which is licensed under the MIT License.
+
+The following files are adaptations of material from that project:
+
+  .editorconfig
+  .gitattributes
+  .pre-commit-config.yaml
+  .shellcheckrc
+  .yamllint.yml
+  PSScriptAnalyzerSettings.psd1
+  ruff.toml
+
+Every other file in this repository is original work.
+
+The full MIT license text applying to both the original project and this one is
+in the LICENSE file. It is kept verbatim, with no additions, so that license
+detection tools recognise it correctly - which is why this attribution lives
+here rather than in LICENSE.
