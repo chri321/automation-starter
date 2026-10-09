@@ -1,78 +1,127 @@
-# automation-starter — 轻量自动化脚本仓库骨架
+# automation-starter
 
-从 [snowdreamtech/template](https://github.com/snowdreamtech/template) 里**摘取并重做**的一套脚本工程化配置。
+[![CI](https://github.com/chri321/automation-starter/actions/workflows/ci.yml/badge.svg)](https://github.com/chri321/automation-starter/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://pre-commit.com)
+[![Platforms](https://img.shields.io/badge/platforms-Linux%20%7C%20macOS%20%7C%20Windows-blue)](#requirements)
+[![Python](https://img.shields.io/badge/python-3.9%2B-blue?logo=python)](https://www.python.org)
 
-目标很具体：让你写 Shell / PowerShell / Python 自动化脚本时，**编辑器里合规、提交时自动拦截、CI 里不翻车**——而不是把一个 88 个规则文件、50 多个 IDE 目录的企业级脚手架搬回家。
+[English](README.md) | [简体中文](README_zh-CN.md)
 
-## 为什么不是直接用原模板
+A lightweight, cross-platform starter kit for **automation-script repositories** —
+the kind of repo that is mostly Shell, PowerShell and Python glue rather than an
+application. Clone it, or copy the parts you want, and get linting, formatting,
+line-ending normalisation and secret scanning from a single `pre-commit` install.
 
-原模板是给"多语言企业项目 + 多 AI IDE 协作"设计的。对只写自动化脚本的人来说，它有三类问题，这套骨架针对性处理了：
+No toolchain orchestrator to adopt, no polyglot runtime matrix to download. The
+only thing you install globally is `pre-commit` itself.
 
-| 原模板的问题 | 这里的处理 |
-| :--- | :--- |
-| 强绑 `unirtm` 工具链编排器，829 行 pre-commit 配置里全是 `unirtm hook-exec xxx`，脱离它跑不起来 | 全部改成标准上游 hook 仓库，**全局只需装 `pre-commit` 一个东西** |
-| 锁了 Go / Node / Python / trivy / syft / goreleaser 一堆用不到的版本，`unirtm install` 要拉一大堆 | 只保留脚本相关配置，零额外运行时依赖 |
-| `.agent/rules/shell.md` 强制要求所有脚本 `source lib/common.sh` 并调用 `guard_project_root` / `parse_common_args`，但 **`scripts/lib/` 根本没随仓库发布** | 补上了可用的 `lib/common.sh` 与 `lib/common.ps1` |
+## Table of contents
 
-原模板对写脚本真正有价值的部分（`shell.md` 那 573 行规范、`.shellcheckrc`、`.gitattributes`、PSScriptAnalyzer 配置）都保留并精简了。
+- [Features](#features)
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Quick start](#quick-start)
+- [Usage](#usage)
+  - [Shell scripts](#shell-scripts)
+  - [The `lib/common.sh` API](#the-libcommonsh-api)
+  - [Python scripts](#python-scripts)
+  - [Cross-platform wrappers](#cross-platform-wrappers)
+- [Project structure](#project-structure)
+- [Configuration](#configuration)
+  - [Active hooks](#active-hooks)
+  - [Optional hooks](#optional-hooks)
+- [Continuous integration](#continuous-integration)
+- [Verification](#verification)
+- [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
+- [License](#license)
+- [Acknowledgements](#acknowledgements)
 
-## 快速开始
+## Features
+
+- **One dependency.** Hooks resolve to standard upstream repositories that
+  `pre-commit` installs into its own isolated virtualenvs. Nothing else to install.
+- **ShellCheck-clean POSIX shell.** A working shared library (`lib/common.sh`)
+  providing logging, argument parsing, a dry-run-aware command runner, a project-root
+  guard and automatic temporary-directory cleanup.
+- **A real cross-platform bridge.** `task.bat` → `task.ps1` → `task.sh` delegation,
+  where only the `.sh` file holds logic. Handles the two Windows traps that
+  silently break such bridges (see [Acknowledgements](#acknowledgements)).
+- **Line endings pinned per platform.** `.gitattributes` forces LF for `*.sh` and
+  CRLF for `*.ps1`/`*.bat`, so a script never fails on Linux with `sh\r`.
+- **Secret scanning ready.** A ready-to-enable `gitleaks` hook, because hard-coded
+  tokens are the classic automation-script mistake.
+- **Pinned, verified revisions.** Every hook `rev` is a real upstream release tag
+  confirmed against the GitHub API — nothing guessed.
+
+## Requirements
+
+| Requirement | Version | Notes |
+| :--- | :--- | :--- |
+| Python | 3.9+ | `pre-commit` and the Python-based hook environments |
+| Git | any recent | The kit is installed as a git hook |
+| POSIX shell | any | Git for Windows ships `sh`; nothing extra needed on Linux/macOS |
+| PowerShell | 5.1+ | Only for the optional `.ps1` wrapper layer |
+
+Optional tools, only if you enable their hooks: `shfmt`, `PSScriptAnalyzer`
+(PowerShell module), `gitleaks`.
+
+## Installation
 
 ```bash
-# 1. 装 pre-commit（本机已装好：pre-commit 4.6.2）
-pip install pre-commit
-
-# 2. 激活 git 钩子（每个仓库执行一次）
+git clone https://github.com/chri321/automation-starter.git
 cd automation-starter
+pip install pre-commit
 pre-commit install
-
-# 3. 全量跑一遍
-pre-commit run --all-files
-
-# 可选：刷新 hook 版本
-pre-commit autoupdate
 ```
 
-> ⚠️ 目前这个目录已经 `git init` 并 `git add` 了，但**还没有 commit**。建议先提交一次，让 hook 生效。
+To adopt the kit inside an **existing** repository, copy the files you need and
+skip the clone:
 
-## 文件清单
+```bash
+# Minimum useful set
+curl -O https://raw.githubusercontent.com/chri321/automation-starter/main/.pre-commit-config.yaml
+curl -O https://raw.githubusercontent.com/chri321/automation-starter/main/.shellcheckrc
+curl -O https://raw.githubusercontent.com/chri321/automation-starter/main/.editorconfig
+curl -O https://raw.githubusercontent.com/chri321/automation-starter/main/.gitattributes
+curl -O https://raw.githubusercontent.com/chri321/automation-starter/main/.yamllint.yml
+curl -O https://raw.githubusercontent.com/chri321/automation-starter/main/ruff.toml
+pre-commit install
+```
 
-| 文件 | 作用 |
-| :--- | :--- |
-| `.pre-commit-config.yaml` | **核心**。5 组 hook，全部为已验证的真实上游版本 |
-| `.shellcheckrc` | ShellCheck 配置。已处理 `SC1091`（动态 source）和 `SC3043`（POSIX 下用 `local`） |
-| `.editorconfig` | 缩进/换行/编码标准（sh 2 空格、py 与 ps1 4 空格、md 保留行尾空格） |
-| `.gitattributes` | **关键**。`*.sh` 强制 LF、`*.ps1`/`*.bat` 强制 CRLF，避免 Linux 上 `sh\r` 报错 |
-| `.yamllint.yml` | YAML 校验，含强制文档头 `---`、2 空格缩进、禁止行尾空格 |
-| `ruff.toml` | Python lint（E/F/W/I/N 规则集，行宽 120） |
-| `PSScriptAnalyzerSettings.psd1` | PowerShell 静态分析配置（可选启用） |
-| `.gitignore` | 排除 `.env`、密钥、`.tmp/`、各类缓存 |
-| `lib/common.sh` | **补写的 POSIX Shell 共享库**（原模板缺失） |
-| `lib/common.ps1` | **补写的 PowerShell 委托库**（原模板缺失） |
-| `examples/demo.sh` | Shell 参考实现：严格模式、库引用、参数解析、dry-run、退出码 |
-| `examples/demo.ps1` | 瘦包装器（零逻辑，仅转发） |
-| `examples/demo.bat` | CMD 入口（零逻辑，仅转发给 ps1） |
-| `examples/cleanup.py` | Python 参考实现：argparse、pathlib、dry-run、显式退出码 |
-| `.github/workflows/ci.yml` | GitHub Actions：ubuntu / windows / macos 三平台矩阵跑 pre-commit |
-| `LICENSE` | MIT，含对上游 `snowdreamtech/template` 的署名（本项目的配置文件层由其派生） |
+## Quick start
 
-## 写新脚本时怎么用
+```bash
+pip install pre-commit          # 1. install the only global dependency
+pre-commit install              # 2. activate the git hook in this repository
+pre-commit run --all-files      # 3. check everything now
+```
 
-### Shell 脚本
+That is the whole setup. From here on the hooks run automatically on `git commit`.
+
+## Usage
+
+### Shell scripts
+
+Start every script from this skeleton:
 
 ```sh
-set -eu                                    # 注意：不用 pipefail，POSIX sh 不支持
+set -eu                                    # NOT `pipefail` - unsupported by POSIX sh
 
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
-. "$SCRIPT_DIR/lib/common.sh"              # 路径按实际层级调整
+. "$SCRIPT_DIR/lib/common.sh"              # adjust the relative path as needed
 
-usage() { cat <<EOF
+PROG_NAME=$(basename "$0")
+
+usage() {
+    cat <<EOF
 Usage: $PROG_NAME [OPTIONS] <args>
 EOF
 }
 
 main() {
-    # 参数解析：公共参数交给库，自己的参数自己管
+    # Common flags are consumed by the library; your own flags belong in the case.
     while [ $# -gt 0 ]; do
         if parse_common_arg "$1"; then shift; continue; fi
         case "$1" in
@@ -82,9 +131,9 @@ main() {
         esac
     done
 
-    guard_project_root                     # 防止在错误目录下执行破坏性操作
-    work_dir=$(make_tmpdir)                # 自动创建，退出时自动清理
-    run rm -rf "$stale_dir"                # --dry-run 时只打印不执行
+    guard_project_root                     # refuse to run from the wrong directory
+    work_dir=$(make_tmpdir)                # created lazily, removed on exit
+    run rm -rf "$stale_dir"                # prints instead of executing under --dry-run
     log_success 'done'
     print_next_actions 'Run: pre-commit run --all-files'
 }
@@ -92,31 +141,47 @@ main() {
 main "$@"
 ```
 
-### `lib/common.sh` API
+### The `lib/common.sh` API
 
-| 函数 | 说明 |
+| Function | Description |
 | :--- | :--- |
-| `log_info` / `log_success` / `log_warn` / `log_error` | 分级日志，非 TTY 或 `NO_COLOR` 下自动去色；warn/error 走 stderr |
-| `log_debug` | 仅 `-v` 时输出，且**始终走 stderr**，不会污染 `$(...)` |
-| `die "msg"` | 打印错误并以非零码退出 |
-| `has_cmd` / `require_cmd` | 用 `command -v` 判断（不用跨平台行为不一致的 `which`） |
-| `is_ci_env` | 判断 `CI` / `GITHUB_ACTIONS` |
-| `make_tmpdir` | 惰性创建临时目录，`EXIT`/`INT`/`TERM` 时自动清理 |
-| `run <cmd...>` | 尊重 `--dry-run` 与 `--verbose` 的执行包装 |
-| `guard_project_root` | 校验根目录标记（默认 `.git`，可用 `PROJECT_ROOT_MARKER` 覆盖） |
-| `parse_common_arg "$1"` | 识别 `-v` / `-n` / `-h`，**返回 0 表示已消费** |
-| `print_next_actions '...'` | 打印收尾提示 |
+| `log_info` / `log_success` / `log_warn` / `log_error` | Levelled logging. Colour is dropped when stdout is not a TTY or `NO_COLOR` is set. Warnings and errors go to stderr. |
+| `log_debug` | Emitted only under `-v`, and **always to stderr** so it cannot corrupt `$(...)`. |
+| `die "message"` | Report an error and exit non-zero. |
+| `has_cmd` / `require_cmd` | Command detection via `command -v`, never `which`. |
+| `is_ci_env` | True when `CI` or `GITHUB_ACTIONS` is set. |
+| `make_tmpdir` | Lazily create a temporary directory; removed automatically on `EXIT`, `INT` and `TERM`. |
+| `run <cmd...>` | Execute a command, honouring `--dry-run` and `--verbose`. |
+| `guard_project_root` | Verify a root marker (default `.git`; override with `PROJECT_ROOT_MARKER`). |
+| `parse_common_arg "$1"` | Recognise `-v`, `-n`, `-h`. **Returns 0 when it consumed the argument.** |
+| `print_next_actions '...'` | Print a standard closing prompt. |
 
-> 📌 **`parse_common_arg` 而不是 `parse_common_args`**：POSIX sh 没有数组，辅助函数无法把任意 argv 交还给调用方。所以这里返回"是否已消费该参数"，由调用方保留自己的循环——这是正确做法，不是偷懒。原模板规则里写的 `parse_common_args "$@"` 是一种在 POSIX sh 里实现不了的接口。
+> **Why `parse_common_arg` and not `parse_common_args "$@"`?**
+> POSIX shell has no arrays, so a helper physically cannot hand an arbitrary
+> `argv` back to its caller. This one reports whether it consumed the current
+> argument and leaves the caller in charge of its own loop. That is the correct
+> design for POSIX sh, not a shortcut.
 
-### 跨平台三件套
+### Python scripts
 
+`examples/cleanup.py` is the reference: `argparse` with `--dry-run` as a
+first-class option, `pathlib` instead of `os.path` string juggling, a `main()`
+guarded by `if __name__ == "__main__":`, and explicit exit codes.
+
+```bash
+python examples/cleanup.py --dir ./logs --days 30 --dry-run
+ruff check examples/cleanup.py
 ```
-task.bat   →   task.ps1   →   task.sh
-（CMD 入口）    （PS 入口）      （POSIX 逻辑，唯一事实来源）
-```
 
-**逻辑只写在 `.sh` 里**，包装器零逻辑：
+### Cross-platform wrappers
+
+For scripts that must also run on Windows, use the three-file delegation chain.
+**All logic lives in the `.sh` file**; the wrappers only forward.
+
+```text
+task.bat   ->   task.ps1   ->   task.sh
+(CMD entry)     (PS entry)     (POSIX logic, single source of truth)
+```
 
 ```powershell
 # task.ps1
@@ -130,65 +195,136 @@ REM task.bat
 powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0task.ps1" %*
 ```
 
-## 可选 hook
+`Invoke-ShellDelegation` locates a POSIX shell, converts the script path into the
+form that shell expects, forwards your arguments and propagates the exit code.
 
-默认关闭，装了对应工具后到 `.pre-commit-config.yaml` 第 5 节取消注释即可：
+## Project structure
 
-```bash
-# shfmt —— Shell 格式化（会改文件）
-# 装法：scoop install shfmt / go install mvdan.cc/sh/v3/cmd/shfmt@latest
-
-# PSScriptAnalyzer —— PowerShell 静态分析
-Install-Module -Name PSScriptAnalyzer -Scope CurrentUser
-
-# gitleaks —— 提交时扫描硬编码密钥（自动化脚本最容易踩的坑）
-# 装法：scoop install gitleaks
+```text
+automation-starter/
+├── .github/
+│   └── workflows/
+│       └── ci.yml                 # three-OS pre-commit matrix
+├── examples/
+│   ├── cleanup.py                 # Python reference implementation
+│   ├── demo.sh                    # Shell reference implementation
+│   ├── demo.ps1                   # thin PowerShell wrapper
+│   └── demo.bat                   # thin CMD wrapper
+├── lib/
+│   ├── common.sh                  # POSIX shell shared library
+│   └── common.ps1                 # PowerShell delegation helper
+├── .editorconfig                  # indent / EOL / encoding standards
+├── .gitattributes                 # per-platform line endings
+├── .gitignore
+├── .pre-commit-config.yaml        # the hook set
+├── .shellcheckrc                  # ShellCheck configuration
+├── .yamllint.yml                  # YAML rules
+├── PSScriptAnalyzerSettings.psd1  # PowerShell analysis settings
+├── ruff.toml                      # Python lint rules
+├── CHANGELOG.md
+├── CONTRIBUTING.md
+├── LICENSE
+├── README.md                      # this file (canonical)
+└── README_zh-CN.md                # Simplified Chinese translation
 ```
 
-## 已验证
+## Configuration
 
-不敢只写不测。这套配置在真实环境跑过，实测记录：
+### Active hooks
 
-| 验证项 | 结果 |
+| Hook | Purpose |
 | :--- | :--- |
-| `pre-commit validate-config` | exit=0 |
-| `pre-commit run --all-files` | **17 项 hook 全部 Passed，exit=0**（4 个上游 rev 全部成功解析并安装） |
-| `shellcheck --shell=sh` on `lib/common.sh`、`demo.sh` | **warning 与 info 两级均 0 条告警** |
-| `yamllint`（用本仓库自己的严格配置） | exit=0 |
-| `ruff check` / `ruff format --check` | 全部通过，格式已合规 |
-| `demo.sh` 正常 / 无参数 / 非法参数 / `--help` / `--dry-run` | exit=0 / 2 / 2 / 0 / 0 |
-| `demo.ps1`、`demo.bat` 委托链 | exit=0，输出正确 |
+| `trailing-whitespace`, `end-of-file-fixer`, `mixed-line-ending` | File hygiene. `mixed-line-ending` reports but never rewrites, because `.gitattributes` owns line endings. |
+| `fix-byte-order-marker` | Strip UTF-8 BOMs, matching `.editorconfig`. |
+| `check-merge-conflict`, `check-case-conflict` | Catch leftover conflict markers and case-colliding filenames. |
+| `check-symlinks`, `destroyed-symlinks` | Detect broken and clobbered symlinks. |
+| `check-added-large-files` | Block accidental binaries over 1 MB. |
+| `check-executables-have-shebangs`, `check-shebang-scripts-are-executable` | Keep the shebang/executable-bit contract honest in both directions. |
+| `detect-private-key` | Block committed private keys. |
+| `shellcheck` (POSIX and Bash variants) | Shell static analysis. |
+| `yamllint` | YAML validation against [`.yamllint.yml`](.yamllint.yml). |
+| `ruff`, `ruff-format` | Python lint and format. |
 
-实测版本：pre-commit 4.6.2、shellcheck 0.11.0、yamllint 1.38.0、ruff 0.16.10、gitleaks 8.30.1（可选）。
+### Optional hooks
 
-### 验证过程中修掉的两个真 bug
+Disabled by default because each needs a binary or module on your machine. Install
+the tool, then uncomment the matching block in
+[`.pre-commit-config.yaml`](.pre-commit-config.yaml).
 
-1. **`lib/common.sh` 带了 shebang 却不可执行** —— 它是被 `source` 的库、从不直接执行，不该有 shebang。pre-commit 的 `check-shebang-scripts-are-executable` 准确抓到了这一点，已移除。
-2. **`lib/common.ps1` 选中了错误的 shell** —— Windows 上 `Get-Command bash` 很可能命中 `%LOCALAPPDATA%\Microsoft\WindowsApps\bash.exe`，那是 **WSL 存根**，不是 Git Bash。它用 `/mnt/d/` 挂载、还需要装发行版，结果表现为一个看不出原因的 `exit 127: No such file or directory`。现在改为**显式优先 Git for Windows 的 `sh`**，并按 shell 家族（msys → `/d/`、wsl → `/mnt/d/`、posix → 原样）映射路径。
+```bash
+# shfmt - shell formatting
+go install mvdan.cc/sh/v3/cmd/shfmt@latest
 
-## Windows 注意事项
+# PSScriptAnalyzer - PowerShell static analysis
+pwsh -Command 'Install-Module -Name PSScriptAnalyzer -Scope CurrentUser'
 
-- **ExecutionPolicy**：跑 `.ps1` 若报"禁止运行脚本"：
-  ```powershell
-  Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-  ```
-  `demo.bat` 已内置 `-ExecutionPolicy Bypass`，不受影响。
-- **CRLF 警告是正常的**：`git add` 时提示 `LF will be replaced by CRLF` 说明 `.gitattributes` 正在按设计工作。
-- **`sh` 从哪来**：Git for Windows 自带。`lib/common.ps1` 会主动去 `%ProgramFiles%\Git\bin\sh.exe` 等位置找，不依赖 PATH 顺序。
+# gitleaks - secret scanning on commit
+winget install gitleaks        # Windows
+brew install gitleaks          # macOS
+```
 
-## 故障排除
+## Continuous integration
 
-| 现象 | 原因与处理 |
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs the same hook set on
+`ubuntu-latest`, `windows-latest` and `macos-latest` with `fail-fast: false`, so a
+platform-specific regression is visible rather than masked. Running on three
+platforms is the point: line-ending and shell-selection bugs only appear on some
+of them.
+
+## Verification
+
+This kit was tested rather than assumed. Evidence:
+
+| Check | Result |
 | :--- | :--- |
-| `check-shebang-scripts-are-executable` 失败 | 复制文件时丢了执行位：`git add --chmod=+x '*.sh'`（仅对**要直接执行**的脚本；被 source 的库应删掉 shebang） |
-| `exit 127` + `No such file or directory` | 委托链选错了 shell 或路径形式不对。确认 `Get-PosixShell` 返回的是 Git 的 `sh.exe` 且 `Family=msys` |
-| `mixed line ending` 报错但不自动修 | 故意为之（`--fix=no`）。`.gitattributes` 已经管换行符，自动改写会跟 CRLF 规则打架 |
-| yamllint 要求 `---` 文档头 | 本仓库配置 `document-start: present`，新建 YAML 记得加 |
-| `Attempt to write a readonly database` | pre-commit 缓存目录权限问题，多见于沙箱；正常环境不会有 |
-| yamllint 报 `truthy value should be one of [false, true]` 且指向 `on:` | YAML 1.1 把裸 `on` 解析成布尔真，而本仓库的 `truthy` 规则**连键名一起查**。写成 `"on":` 即可（`.github/workflows/ci.yml` 就是这么做的，上游模板同款处理） |
+| `pre-commit validate-config` | exit 0 |
+| `pre-commit run --all-files` | all 17 hooks pass, exit 0 |
+| `shellcheck --shell=sh` on `lib/common.sh` and `demo.sh` | zero findings at both `warning` and `info` severity |
+| `yamllint` using this repository's own strict config | exit 0 |
+| `ruff check` and `ruff format --check` | pass, already formatted |
+| `demo.sh` normal / no args / bad args / `--help` / `--dry-run` | exit 0 / 2 / 2 / 0 / 0 |
+| `demo.ps1` and `demo.bat` delegation chain | exit 0, correct output |
 
-## 参考
+Tested against pre-commit 4.6.2, ShellCheck 0.11.0, yamllint 1.38.0, ruff 0.16.10
+and gitleaks 8.30.1.
 
-- 上游模板：<https://github.com/snowdreamtech/template>
-- 最有价值的一份规范：该仓库的 `.agent/rules/shell.md`（573 行，建议通读）
-- 约定式提交：<https://www.conventionalcommits.org/>
+Two real defects were found and fixed by this process; both are documented in the
+[CHANGELOG](CHANGELOG.md).
+
+## Troubleshooting
+
+| Symptom | Cause and fix |
+| :--- | :--- |
+| `check-shebang-scripts-are-executable` fails | The executable bit was lost when files were copied: `git add --chmod=+x '*.sh'`. Only for scripts meant to run directly — a **sourced** library must have no shebang at all. |
+| `exit 127` with `No such file or directory` for a file that exists | The delegation helper selected the wrong shell or path form. On Windows, `Get-Command bash` often resolves to the WSL stub in `%LOCALAPPDATA%\Microsoft\WindowsApps`, which mounts drives at `/mnt/d`. `Get-PosixShell` handles this; make sure it reports Git's `sh.exe` with `Family=msys`. |
+| `mixed line ending` fails but does not auto-fix | Intentional (`--fix=no`). `.gitattributes` owns line endings; letting the hook rewrite files would fight the CRLF rules it enforces. |
+| yamllint: `truthy value should be one of [false, true]` pointing at `on:` | YAML 1.1 resolves a bare `on` to boolean true, and this repository's strict `truthy` rule checks keys as well as values. Quote the key: `"on":`. GitHub Actions accepts both forms. |
+| yamllint demands a `---` document start | `document-start: present` is enabled. Add `---` to new YAML files. |
+| `Attempt to write a readonly database` | A `pre-commit` cache permission problem, typically seen in sandboxes. Not an issue in a normal environment. |
+| `git` cannot reach github.com | In networks where github.com is SNI-blocked, route git through your local proxy, scoped to GitHub only: `git config --global http.https://github.com.proxy http://127.0.0.1:7890` |
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). In short: conventional commit messages,
+hooks must pass, and every script change must keep `shellcheck --shell=sh` clean
+at `--severity=info`.
+
+## License
+
+[MIT](LICENSE) © 2026 chri321.
+
+## Acknowledgements
+
+The configuration layer (`.editorconfig`, `.gitattributes`, `.shellcheckrc`,
+`.yamllint.yml`, `PSScriptAnalyzerSettings.psd1`, `ruff.toml` and the hook set) is
+adapted from [snowdreamtech/template](https://github.com/snowdreamtech/template),
+also MIT licensed. That project's `.agent/rules/shell.md` is an excellent
+practical reference for writing robust shell and is worth reading in full.
+
+Two things this kit does differently, both learned the hard way while testing:
+
+1. **Upstream forbids a shebang on the shared library transitively.** Its
+   `check-shebang-scripts-are-executable` hook is right to complain about a sourced
+   file carrying a shebang; this kit makes that explicit.
+2. **Blindly falling back to `bash` on Windows is a trap.** The Microsoft Store
+   execution alias is a WSL stub, not Git Bash, and it fails with a bare exit 127.
