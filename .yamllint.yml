@@ -1,0 +1,58 @@
+---
+# yamllint configuration
+#
+# Adapted from snowdreamtech/template (.yamllint.yml), trimmed to the scope of
+# an automation-script repository.
+
+extends: default
+
+ignore: |
+  .git/
+  .venv/
+  venv/
+  node_modules/
+  **/*.md
+
+rules:
+  # Disabled deliberately. YAML in automation repos routinely carries long
+  # strings (URLs, SSH arguments, shell one-liners, Jinja templates) where a
+  # hard character limit is counterproductive. Use block scalars (| or >) for
+  # readability where it helps, but do not enforce a width.
+  line-length: disable
+
+  document-start:
+    present: true
+    level: error
+
+  truthy:
+    allowed-values: ["true", "false"]
+    level: error
+
+  indentation:
+    spaces: 2
+    indent-sequences: true
+    level: error
+
+  trailing-spaces:
+    level: error
+
+  empty-lines:
+    max: 2
+    level: error
+
+  new-line-at-end-of-file:
+    level: error
+
+  comments:
+    min-spaces-from-content: 1
+
+  comments-indentation: disable
+
+  braces:
+    min-spaces-inside: 0
+    max-spaces-inside: 1
+
+  octal-values: disable
+
+  colons:
+    max-spaces-after: -1

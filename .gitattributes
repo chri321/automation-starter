@@ -1,0 +1,87 @@
+# Git attributes - line ending and diff normalisation
+#
+# Adapted from snowdreamtech/template (.gitattributes), trimmed.
+#
+# WHY THIS FILE MATTERS for script authors:
+#   A shell script saved with CRLF line endings fails on Linux with
+#   "/usr/bin/env: 'sh\r': No such file or directory" - a genuinely confusing
+#   error. These rules pin the correct EOL per platform so it cannot happen.
+#
+# NOTE: in .gitattributes the LAST matching rule wins.
+
+# -----------------------------------------------------------------------------
+# 1. Global default
+# -----------------------------------------------------------------------------
+* text=auto eol=lf
+
+# -----------------------------------------------------------------------------
+# 2. POSIX shell and interpreted scripts - ALWAYS LF
+# -----------------------------------------------------------------------------
+*.sh    text eol=lf
+*.bash  text eol=lf
+*.zsh   text eol=lf
+*.bats  text eol=lf
+*.py    text eol=lf
+*.pl    text eol=lf
+
+# -----------------------------------------------------------------------------
+# 3. Documentation and configuration - ALWAYS LF
+# -----------------------------------------------------------------------------
+*.md    text eol=lf
+*.txt   text eol=lf
+*.json  text eol=lf
+*.jsonc text eol=lf
+*.toml  text eol=lf
+*.yaml  text eol=lf
+*.yml   text eol=lf
+*.ini   text eol=lf
+*.cfg   text eol=lf
+*.xml   text eol=lf
+*.csv   text eol=lf
+*.psd1  text eol=lf
+
+# Config files with no extension need explicit names.
+.editorconfig    text eol=lf
+.gitattributes   text eol=lf
+.gitignore       text eol=lf
+.gitleaksignore  text eol=lf
+.shellcheckrc    text eol=lf
+.yamllint.yml    text eol=lf
+Dockerfile       text eol=lf
+Makefile         text eol=lf
+LICENSE          text eol=lf
+
+# -----------------------------------------------------------------------------
+# 4. Windows scripts - ALWAYS CRLF
+#    Declared AFTER section 2 and 3 so these rules win for *.ps1 / *.bat / *.cmd.
+# -----------------------------------------------------------------------------
+*.ps1  text eol=crlf
+*.psm1 text eol=crlf
+*.bat  text eol=crlf
+*.cmd  text eol=crlf
+
+# -----------------------------------------------------------------------------
+# 5. Binary assets - never normalise, never diff
+# -----------------------------------------------------------------------------
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.webp binary
+*.pdf  binary
+*.zip  binary
+*.gz   binary
+*.tgz  binary
+*.tar  binary
+*.7z   binary
+*.rar  binary
+*.exe  binary
+*.dll  binary
+*.so   binary
+*.o    binary
+*.pyc  binary
+*.jar  binary
+*.woff binary
+*.woff2 binary
+*.ttf  binary

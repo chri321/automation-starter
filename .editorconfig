@@ -1,0 +1,55 @@
+# EditorConfig - automation script standards
+#
+# Adapted from snowdreamtech/template (.editorconfig), trimmed to the file
+# types an automation-script repository actually contains.
+# Reference: https://EditorConfig.org
+
+root = true
+
+# -- Global defaults ----------------------------------------------------------
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# -- 4-space indentation ------------------------------------------------------
+# Python and PowerShell: ecosystem convention is 4 spaces.
+[*.{py,psm1,psd1}]
+indent_style = space
+indent_size = 4
+
+# -- 2-space indentation ------------------------------------------------------
+# Shell (matches `shfmt -i 2`) and all structured config formats.
+[*.{sh,bash,zsh}]
+indent_style = space
+indent_size = 2
+
+[*.{yml,yaml,json,jsonc,toml,ini,cfg,properties}]
+indent_style = space
+indent_size = 2
+
+# -- 4-space for Windows shell scripts ----------------------------------------
+# PowerShell convention is 4 spaces, unlike POSIX shell.
+[*.ps1]
+indent_style = space
+indent_size = 4
+
+# -- Batch files --------------------------------------------------------------
+[*.{bat,cmd}]
+indent_style = space
+indent_size = 2
+
+# -- Makefile -----------------------------------------------------------------
+[Makefile]
+indent_style = tab
+
+# -- Markdown -----------------------------------------------------------------
+# Trailing whitespace is meaningful in Markdown (hard line break).
+[*.md]
+trim_trailing_whitespace = false
+
+# -- Binary / generated assets ------------------------------------------------
+[*.{png,jpg,jpeg,gif,webp,ico,pdf,zip,gz,tar,7z,exe,dll,so,o,pyc,jar,war,ear}]
+insert_final_newline = false
+trim_trailing_whitespace = false

@@ -1,0 +1,53 @@
+---
+# Cross-platform CI: proves the kit lints cleanly on Linux, macOS and Windows.
+#
+# Rationale: this repository's entire reason for existing is cross-platform
+# script portability, so testing on a single OS would miss the point. Windows
+# in particular is where the line-ending and shell-selection problems live.
+name: CI
+
+# NOTE: the key is quoted deliberately. YAML 1.1 resolves a bare `on` to boolean
+# true, and yamllint's strict `truthy` rule (which this repo enables) checks keys
+# as well as values - so an unquoted `on:` is rejected with
+# "truthy value should be one of [false, true]". Quoting keeps the key a string,
+# keeps the strict rule enabled, and GitHub Actions accepts both forms.
+"on":
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+# Least privilege: this workflow only reads the repository.
+permissions:
+  contents: read
+
+# Job-level concurrency with a unique prefix, so a rapid push sequence cancels
+# superseded runs instead of queueing them.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pre-commit:
+    name: pre-commit (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      # Do not abort the other platforms when one fails - the whole point is to
+      # see which OS disagrees.
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v7.0.1
+
+      - name: Set up Python
+        uses: actions/setup-python@v7.0.0
+        with:
+          python-version: "3.12"
+
+      - name: Install pre-commit
+        run: python -m pip install --disable-pip-version-check pre-commit
+
+      - name: Run pre-commit on all files
+        run: pre-commit run --all-files --show-diff-on-failure

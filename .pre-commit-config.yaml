@@ -1,0 +1,102 @@
+---
+# ---------------------------------------------------------------------------
+# Lightweight pre-commit configuration for automation-script repositories.
+#
+# Derived from snowdreamtech/template, but with EVERY unirtm dependency
+# removed. Each hook below resolves to a standard upstream repository that
+# pre-commit installs into its own isolated virtualenv, so the ONLY thing you
+# need to install globally is `pre-commit` itself.
+#
+# Every revision is a real upstream release tag that was verified against the
+# GitHub API - nothing here is guessed. Refresh with: pre-commit autoupdate
+# ---------------------------------------------------------------------------
+
+repos:
+  # -------------------------------------------------------------------------
+  # 1. Universal file hygiene - cheap checks that catch real mistakes
+  # -------------------------------------------------------------------------
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+        # Report but never rewrite. .gitattributes already pins the correct EOL
+        # per platform; letting this hook "fix" files would fight the CRLF
+        # rules it enforces for *.ps1 and *.bat.
+        args: [--fix=no]
+      - id: fix-byte-order-marker
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: check-symlinks
+      - id: destroyed-symlinks
+      - id: check-added-large-files
+        args: [--maxkb=1024]
+      - id: check-executables-have-shebangs
+      - id: check-shebang-scripts-are-executable
+      - id: detect-private-key
+
+  # -------------------------------------------------------------------------
+  # 2. Shell - POSIX sh by default, Bash only where genuinely required
+  # -------------------------------------------------------------------------
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.11.0.1
+    hooks:
+      - id: shellcheck
+        name: shellcheck (POSIX sh)
+        args: [--shell=sh, --severity=warning]
+        files: \.sh$
+      - id: shellcheck
+        alias: shellcheck-bash
+        name: shellcheck (Bash)
+        args: [--shell=bash, --severity=warning]
+        files: \.bash$
+
+  # -------------------------------------------------------------------------
+  # 3. YAML - pipeline definitions and configuration files
+  # -------------------------------------------------------------------------
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.38.0
+    hooks:
+      - id: yamllint
+        args: [-c, .yamllint.yml, -s]
+
+  # -------------------------------------------------------------------------
+  # 4. Python - script bodies and helper modules
+  # -------------------------------------------------------------------------
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.16.10
+    hooks:
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+      - id: ruff-format
+
+  # -------------------------------------------------------------------------
+  # 5. OPTIONAL hooks - each requires a system binary or PowerShell module.
+  #    Uncomment a block ONLY after installing the tool. See README.md.
+  # -------------------------------------------------------------------------
+  # - repo: local
+  #   hooks:
+  #     - id: shfmt
+  #       name: shfmt (format shell scripts)
+  #       entry: shfmt -w -s -i 2
+  #       language: system
+  #       files: \.sh$
+  #
+  #     - id: psscriptanalyzer
+  #       name: PSScriptAnalyzer
+  #       language: system
+  #       types: [powershell]
+  #       entry: >-
+  #         pwsh -NoProfile -Command "& {
+  #         if (!(Get-Command Invoke-ScriptAnalyzer -ErrorAction SilentlyContinue)) { exit 0 };
+  #         $r = $args | ForEach-Object {
+  #         Invoke-ScriptAnalyzer -Path $_ -Settings PSScriptAnalyzerSettings.psd1 -Severity Error,Warning };
+  #         if ($r) { $r | Format-Table -AutoSize; exit 1 } }"
+  #
+  #     - id: gitleaks
+  #       name: gitleaks (secret scanning)
+  #       entry: gitleaks git --pre-commit --redact --staged --verbose
+  #       language: system
+  #       pass_filenames: false

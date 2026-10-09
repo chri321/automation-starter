@@ -1,0 +1,19 @@
+# ShellCheck configuration
+#
+# Adapted from snowdreamtech/template (.shellcheckrc) and
+# .agent/rules/shell.md section 1.
+
+# SC1091 - "Not following: file not found"
+#   We source lib/common.sh via a runtime-computed path, which ShellCheck
+#   cannot resolve statically. Disabled globally.
+#
+# SC3043 / SC2039 - "In POSIX sh, 'local' is undefined"
+#   The project standard is to use `local` for variable scoping inside
+#   functions even in POSIX sh. Every shell that matters (dash, ash, ksh,
+#   bash, zsh) supports it. This is a deliberate, documented deviation
+#   from strict POSIX pedantry in favour of variable safety.
+disable=SC1091,SC3043,SC2039
+
+# Resolve `source=` directives relative to the script being checked rather
+# than the working directory.
+source-path=SCRIPTDIR
